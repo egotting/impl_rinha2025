@@ -6,5 +6,5 @@ public interface IPaymentProcessorService {
     boolean sendPayment(PaymentRequest payment);
 
     void processPayment(PaymentRequest clientRequest);
-    void purgeData();
+    void purgeQueue();
 }

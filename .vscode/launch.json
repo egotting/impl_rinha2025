@@ -9,6 +9,16 @@
       "projectName": "impl_rinha",
       "args": "",
       "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-ImplRinha2025Application<impl_rinha2025>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.github.egotting.impl_rinha2025.ImplRinha2025Application",
+      "projectName": "impl_rinha2025",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
     }
   ]
 }

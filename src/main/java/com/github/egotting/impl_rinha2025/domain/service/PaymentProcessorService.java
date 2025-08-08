@@ -3,7 +3,6 @@ package com.github.egotting.impl_rinha2025.domain.service;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentProcessorRequest;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.service.Interface.IPaymentProcessorService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,10 +19,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class PaymentProcessorService implements IPaymentProcessorService {
     private RestTemplate restTemplate = new RestTemplate();
     private ConcurrentLinkedQueue<PaymentProcessorRequest> dbQueue = new ConcurrentLinkedQueue<>();
-    @Value("{payment.processor.default}")
-    private String defaultUrl;
-    @Value("{payment.processor.fallback}")
-    private String fallbackUrl;
+    private final String defaultUrl = "http://payment-processor-default:8080";
+    private final String fallbackUrl = "http://payment-processor-fallback:8080";
+//    private final String defaultUrl = "http://localhost:8001";
+//    private final String fallbackUrl = "http://localhost:8002";
     @Override
     public boolean sendPayment(PaymentRequest payment) {
         var paymentObject = new PaymentProcessorRequest(
@@ -50,7 +49,6 @@ public class PaymentProcessorService implements IPaymentProcessorService {
                     PaymentProcessorRequest.class
             );
         }
-
         return response.getStatusCode().value() == HttpStatus.OK.value();
     }
 
@@ -61,7 +59,7 @@ public class PaymentProcessorService implements IPaymentProcessorService {
     }
 
     @Override
-    public void purgeData() {
+    public void purgeQueue() {
         dbQueue.clear();
     }
 }
