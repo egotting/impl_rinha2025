@@ -14,7 +14,7 @@ public class PaymentProcessorRepository implements IPaymentProcessorRepository {
 
     @Override
     public void save(PaymentProcessorRequest paymentDto) {
-        if(!paymentDto.status()){
+        if (!paymentDto.status()) {
             dbMemoryDefault.add(paymentDto);
         }
         dbMemoryFallback.add(paymentDto);

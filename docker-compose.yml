@@ -39,12 +39,12 @@ services:
   api01:
     <<: *backend-template
     container_name: api01
-#    healthcheck:
-#      test:
-#        ["CMD", "curl", "-f", "http://localhost:8080/payments/service-health"]
-#      interval: 5s
-#      timeout: 3s
-#      retries: 5
+  #    healthcheck:
+  #      test:
+  #        ["CMD", "curl", "-f", "http://localhost:8080/payments/service-health"]
+  #      interval: 5s
+  #      timeout: 3s
+  #      retries: 5
 
   api02:
     <<: *backend-template
