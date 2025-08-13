@@ -16,7 +16,7 @@ public class Client {
 
     @PostMapping("/payments")
     public ResponseEntity sendPayment(@RequestBody PaymentRequest request) {
-        _service.sendPayment(request);
+        _service.processPayment(request);
         return ResponseEntity.ok().build();
     }
 }

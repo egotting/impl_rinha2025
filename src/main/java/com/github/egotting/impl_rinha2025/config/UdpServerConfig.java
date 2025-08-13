@@ -22,7 +22,6 @@ public class UdpServerConfig {
         final int PORT = 8080;
         DatagramSocket socket = new DatagramSocket(PORT);
         byte[] buffer = new byte[4 * 1024 * 1024];
-        System.out.println("Servidor udp aguardando");
         try {
             DatagramPacket request = new DatagramPacket(buffer, buffer.length);
             socket.receive(request);
