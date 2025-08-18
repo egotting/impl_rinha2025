@@ -16,6 +16,6 @@ public class BuildRequest {
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        return response.statusCode() != 500;
+        return response.statusCode() == 200 || response.statusCode() == 402;
     }
 }
