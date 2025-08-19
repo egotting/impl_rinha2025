@@ -12,11 +12,14 @@ public class PaymentProcessorRepository implements IPaymentProcessorRepository {
     ConcurrentLinkedQueue<PaymentProcessorRequest> dbMemoryDefault = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<PaymentProcessorRequest> dbMemoryFallback = new ConcurrentLinkedQueue<>();
 
+
     @Override
-    public void save(PaymentProcessorRequest paymentDto) {
-        if (!paymentDto.status()) {
-            dbMemoryDefault.add(paymentDto);
-        }
+    public void saveDefault(PaymentProcessorRequest paymentDto) {
+        dbMemoryDefault.add(paymentDto);
+    }
+
+    @Override
+    public void saveFallback(PaymentProcessorRequest paymentDto) {
         dbMemoryFallback.add(paymentDto);
     }
 

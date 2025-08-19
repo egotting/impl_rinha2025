@@ -4,6 +4,9 @@ import com.github.egotting.impl_rinha2025.domain.model.PaymentProcessorRequest;
 
 public interface IPaymentProcessorRepository {
 
-    void save(PaymentProcessorRequest paymentDto);
+    void saveDefault(PaymentProcessorRequest paymentDto);
+
+    void saveFallback(PaymentProcessorRequest paymentDto);
+
     void deleteAll();
 }

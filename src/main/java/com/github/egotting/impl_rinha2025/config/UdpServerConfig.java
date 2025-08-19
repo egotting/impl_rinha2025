@@ -1,6 +1,7 @@
 package com.github.egotting.impl_rinha2025.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.github.egotting.impl_rinha2025.config.Interface.IUdpServerConfig;
+import jakarta.annotation.PostConstruct;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -9,57 +10,53 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
-public class UdpServerConfig {
-    @Value("${payment.processor.default}")
-    private static String Default;
-    @Value("${payment.processor.fallback}")
-    private static String Fallback;
+public class UdpServerConfig implements IUdpServerConfig {
+    private final AtomicBoolean lastCheck = new AtomicBoolean(false);
+    private DatagramSocket socket;
+    private final int PORT = 8080;
 
     @Scheduled(initialDelay = 100, fixedDelay = 300)
-    public static boolean udpCheckHealth(String url) throws IOException {
-        final int PORT = 8080;
-        DatagramSocket socket = new DatagramSocket(PORT);
-        byte[] buffer = new byte[4 * 1024 * 1024];
-        try {
-            DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-            socket.receive(request);
-
-            boolean apiCheck = checkApi(url);
-//            boolean checkFallbackIsOn = checkApi(Fallback);
-//            if (!checkDefaultIsOn) {
-//                byte[] responseData = String.valueOf(checkFallbackIsOn).getBytes();
-//                DatagramPacket responseFallback = new DatagramPacket(
-//                        responseData,
-//                        responseData.length,
-//                        request.getAddress(),
-//                        request.getPort()
-//                );
-//                socket.send(responseFallback);
-//                return false;
-//            }
-            byte[] responseData = String.valueOf(apiCheck).getBytes();
-            DatagramPacket responseDefault = new DatagramPacket(
-                    responseData,
-                    responseData.length,
-                    request.getAddress(),
-                    request.getPort()
-            );
-            socket.send(responseDefault);
-            return true;
-        } catch (Exception ignore) {
-        }
-        return false;
+    public AtomicBoolean checkApiJob(String url) {
+        boolean result = checkApi(url);
+        lastCheck.set(result);
+        return lastCheck;
     }
 
-    private static boolean checkApi(String url) {
+    @PostConstruct
+    private void udpCheckHealth() throws IOException {
+        DatagramSocket socket = new DatagramSocket(PORT);
+        new Thread(() -> {
+            byte[] buffer = new byte[4 * 1024 * 1024];
+            while (true) {
+                try {
+                    DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(request);
+
+                    byte[] response = String.valueOf(lastCheck.get()).getBytes();
+                    DatagramPacket responseDefault = new DatagramPacket(
+                            response,
+                            response.length,
+                            request.getAddress(),
+                            request.getPort()
+                    );
+                    socket.send(responseDefault);
+                } catch (Exception ignore) {
+                }
+            }
+        }).start();
+    }
+
+
+    private boolean checkApi(String url) {
         try {
             HttpURLConnection cnc = (HttpURLConnection) new URL(url).openConnection();
             cnc.setRequestMethod("HEAD");
-            cnc.setConnectTimeout(3000);
+            cnc.setConnectTimeout(1000);
             cnc.setReadTimeout(2000);
-            return cnc.getResponseCode() != 500;
+            return cnc.getResponseCode() < 500;
         } catch (Exception e) {
             return false;
         }

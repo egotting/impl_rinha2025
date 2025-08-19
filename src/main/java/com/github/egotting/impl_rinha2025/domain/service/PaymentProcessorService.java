@@ -1,12 +1,13 @@
 package com.github.egotting.impl_rinha2025.domain.service;
 
 import com.github.egotting.impl_rinha2025.config.BuildRequest;
-import com.github.egotting.impl_rinha2025.config.UdpServerConfig;
+import com.github.egotting.impl_rinha2025.config.Interface.IUdpServerConfig;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentProcessorRequest;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.repository.PaymentProcessorRepository;
 import com.github.egotting.impl_rinha2025.domain.service.Interface.IPaymentProcessorService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,19 +24,21 @@ public class PaymentProcessorService implements IPaymentProcessorService {
     private ConcurrentLinkedQueue<PaymentRequest> dbQueue = new ConcurrentLinkedQueue<>();
     private final String Default = "http://payment-processor-default:8080";
     private final String Fallback = "http://payment-processor-fallback:8080";
-    //    private final String Default = "http://localhost:8001";
-    //    private final String Fallback = "http://localhost:8002";
+//    private final String Default = "http://localhost:8001";
+//    private final String Fallback = "http://localhost:8002";
     //    @Value("${payment.processor.default}")
     //    private static String Default;
     //    @Value("${payment.processor.fallback}")
     //    private static String Fallback;
 
-    private PaymentProcessorRepository _repository;
+    private final PaymentProcessorRepository _repository;
     private final Executor _exec;
+    private final IUdpServerConfig _udpServerConfig;
 
-    public PaymentProcessorService(PaymentProcessorRepository _repository, @Qualifier("taskExecutor") Executor _exec) {
+    public PaymentProcessorService(IUdpServerConfig _udpServerConfig, PaymentProcessorRepository _repository, @Qualifier("worker") Executor _exec) {
         this._repository = _repository;
         this._exec = _exec;
+        this._udpServerConfig = _udpServerConfig;
     }
 
     @Override
@@ -49,25 +52,32 @@ public class PaymentProcessorService implements IPaymentProcessorService {
         var _default = new PaymentProcessorRequest(request.correlationId(), request.amount(), true, Instant.now());
         var _fallback = new PaymentProcessorRequest(request.correlationId(), request.amount(), false, Instant.now());
         var response = sendPayment(request);
-        if (response == 0) sendToQueue(request);
-        if (response == 1) {
-            _repository.save(_fallback);
+        if (response == 0) {
+            sendToQueue(request);
         }
-        _repository.save(_default);
-        /* TODO: CHAMAR O HEALTHCHECK PARA VERIFICAR SE AINDA ESTA CAIDO E CASO N ESTEJA
-         *   CHAMA O SENDPAYMENT MANDANDO AS REQUESTS */
+        if (response == 1) {
+            _repository.saveFallback(_fallback);
+            return;
+        }
+        if (response == 2) {
+            _repository.saveDefault(_default);
+            return;
+        }
+
     }
 
     @Override
+    @Scheduled(initialDelay = 100, fixedDelay = 15)
     public CompletableFuture<Void> cleanUpQueue() {
-        /* TODO: vai ler/processar os valores da queue em segundo plano e fazer o request dnv */
         return CompletableFuture.runAsync(() -> {
-            var data = dbQueue.poll();
-            if (data == null) return;
-            try {
-                sendPayment(data);
-            } catch (IOException | URISyntaxException | InterruptedException ignored) {
-            }
+            do {
+                var data = dbQueue.poll();
+                if (data == null) return;
+                try {
+                    sendPayment(data);
+                } catch (IOException | URISyntaxException | InterruptedException ignored) {
+                }
+            } while (!dbQueue.isEmpty());
         }, _exec);
     }
 
@@ -88,15 +98,20 @@ public class PaymentProcessorService implements IPaymentProcessorService {
                   "amount": %.2f
                 }
                 """.formatted(request.correlationId(), request.amount());
-
-        if (!UdpServerConfig.udpCheckHealth(Default) && !UdpServerConfig.udpCheckHealth(Fallback)) {
-            return 0;
+        int returnType = 0;
+        try {
+            if (!_udpServerConfig.checkApiJob(Default).get()) {
+                System.out.println(!_udpServerConfig.checkApiJob(Default).get());
+                BuildRequest.buildRequest(formattedRequest, new URI(Fallback));
+                returnType += 1;
+            }
+            if (_udpServerConfig.checkApiJob(Default).get()) {
+                BuildRequest.buildRequest(formattedRequest, new URI(Default));
+                return returnType += 2;
+            }
+        } catch (Exception ignored) {
         }
-        if (!UdpServerConfig.udpCheckHealth(Default)) {
-            BuildRequest.buildRequest(formattedRequest, new URI(Fallback));
-            return 1;
-        }
-        BuildRequest.buildRequest(formattedRequest, new URI(Default));
-        return 2;
+        System.out.println(returnType);
+        return returnType;
     }
 }
