@@ -7,9 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 @RestController
 public class Client {
 
@@ -20,8 +17,8 @@ public class Client {
     }
 
     @PostMapping("/payments")
-    public ResponseEntity sendPayment(@RequestBody PaymentRequest request) throws IOException, URISyntaxException, InterruptedException {
-        _service.processPayment(request);
+    public ResponseEntity<Void> sendPayment(@RequestBody PaymentRequest request) {
+        _service.pay(request);
         return ResponseEntity.ok().build();
     }
 }
