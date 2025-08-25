@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 
 @Configuration
 public class PendingPaymentsWorker implements IPaymentWorker {
-    private final ExecutorService _exec = Executors.newSingleThreadExecutor();
+    private final ExecutorService _exec = Executors.newVirtualThreadPerTaskExecutor();
     private final IQueuePaymentProcessorRepository _queue;
     private final IMemoryPaymentProcessorRepository _memory;
     private final IPaymentProcessorService _service;
@@ -33,7 +33,7 @@ public class PendingPaymentsWorker implements IPaymentWorker {
 //    public void init() {
 //        _exec.submit(this::pendent);
 //    }
-    @Scheduled(initialDelay = 100, fixedDelay = 15)
+    @Scheduled(fixedDelay = 5)
     public void pendent() {
         if (_queue.isEmpty()) return;
         int size = Math.min(_queue.sizeQueue(), 20);
