@@ -3,7 +3,9 @@ package com.github.egotting.impl_rinha2025.domain.repository;
 import com.github.egotting.impl_rinha2025.domain.model.Memory.Interface.IQueuePaymentProcessor;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.repository.Interface.IQueuePaymentProcessorRepository;
+import org.springframework.stereotype.Component;
 
+@Component
 public class QueuePaymentProcessorRepository implements IQueuePaymentProcessorRepository {
     private final IQueuePaymentProcessor _queue;
 
@@ -17,12 +19,22 @@ public class QueuePaymentProcessorRepository implements IQueuePaymentProcessorRe
     }
 
     @Override
-    public void prune() {
-        _queue.deleteAll();
+    public PaymentRequest take() throws InterruptedException {
+        return _queue.takeValue();
     }
 
     @Override
-    public boolean notification() {
-        return _queue.notification();
+    public boolean isEmpty() {
+        return _queue.isEmpty();
+    }
+
+    @Override
+    public int sizeQueue() {
+        return _queue.size();
+    }
+
+    @Override
+    public void prune() {
+        _queue.deleteAll();
     }
 }

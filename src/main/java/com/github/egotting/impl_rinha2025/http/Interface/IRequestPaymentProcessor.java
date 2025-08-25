@@ -2,8 +2,10 @@ package com.github.egotting.impl_rinha2025.http.Interface;
 
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 
-public interface IRequestPaymentProcessor {
-    void paymentDefault(PaymentRequest request);
+import java.io.IOException;
 
-    void paymentFallback(PaymentRequest request);
+public interface IRequestPaymentProcessor {
+    int paymentDefault(PaymentRequest request);
+
+    int paymentFallback(PaymentRequest request) throws IOException, InterruptedException;
 }

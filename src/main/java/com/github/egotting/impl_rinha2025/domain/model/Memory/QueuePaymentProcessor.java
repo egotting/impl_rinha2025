@@ -4,37 +4,37 @@ import com.github.egotting.impl_rinha2025.domain.model.Memory.Interface.IQueuePa
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Component
 public class QueuePaymentProcessor implements IQueuePaymentProcessor {
-    private ConcurrentLinkedQueue<PaymentRequest> dbQueue = new ConcurrentLinkedQueue<>();
+    private BlockingQueue<PaymentRequest> _queue = new LinkedBlockingQueue<>(10000);
 
     @Override
     public void addInQueue(PaymentRequest request) {
-        dbQueue.add(request);
+        _queue.offer(request);
     }
 
     @Override
-    public PaymentRequest pollValue() {
-        return dbQueue.poll();
+    public int size() {
+        return _queue.size();
     }
+
+    @Override
+    public boolean isEmpty() {
+        return _queue.isEmpty();
+    }
+
+    @Override
+    public PaymentRequest takeValue() {
+        return _queue.poll();
+    }
+
 
     @Override
     public void deleteAll() {
-        dbQueue.clear();
+        _queue.clear();
     }
 
-    @Override
-    public boolean notification() {
-        if (dbQueue.isEmpty()) pauseFor(300);
-        return !dbQueue.isEmpty();
-    }
-
-    private void pauseFor(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (Exception ignored) {
-        }
-    }
 }

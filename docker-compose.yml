@@ -7,7 +7,7 @@ x-services-template:
     environment:
       - PAYMENT_PROCESSOR_URL_DEFAULT=http://payment-processor-default:8080
       - PAYMENT_PROCESSOR_URL_FALLBACK=http://payment-processor-fallback:8080
-      - JAVA_OPTS=-server -XX:+UseG1GC -Xlog:disable -XX:-PrintGC -XX:-PrintGCDetails -XX:-FlightRecorder -XX:+DisableExplicitGC
+    #      - JAVA_OPTS= -Xlog:disable -XX:-PrintGC -XX:-PrintGCDetails -XX:-FlightRecorder -XX:+DisableExplicitGC
     networks:
       - backend
       - payment-processor
@@ -33,7 +33,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.4"
+          cpus: "0.1"
           memory: "10M"
 
   api01:
