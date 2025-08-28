@@ -19,8 +19,8 @@ public class QueuePaymentProcessorRepository implements IQueuePaymentProcessorRe
     }
 
     @Override
-    public PaymentRequest take() throws InterruptedException {
-        return _queue.takeValue();
+    public PaymentRequest poll() throws InterruptedException {
+        return _queue.pollValue();
     }
 
     @Override

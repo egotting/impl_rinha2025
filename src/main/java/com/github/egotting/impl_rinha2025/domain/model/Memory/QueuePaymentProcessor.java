@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class QueuePaymentProcessor implements IQueuePaymentProcessor {
@@ -27,8 +28,8 @@ public class QueuePaymentProcessor implements IQueuePaymentProcessor {
     }
 
     @Override
-    public PaymentRequest takeValue() {
-        return _queue.poll();
+    public PaymentRequest pollValue() throws InterruptedException {
+        return _queue.poll(200, TimeUnit.MILLISECONDS);
     }
 
 

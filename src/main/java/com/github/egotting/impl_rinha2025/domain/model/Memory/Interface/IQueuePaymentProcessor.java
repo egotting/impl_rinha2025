@@ -8,7 +8,7 @@ public interface IQueuePaymentProcessor {
     int size();
     boolean isEmpty();
 
-    PaymentRequest takeValue() throws InterruptedException;
+    PaymentRequest pollValue() throws InterruptedException;
 
     void deleteAll();
 
