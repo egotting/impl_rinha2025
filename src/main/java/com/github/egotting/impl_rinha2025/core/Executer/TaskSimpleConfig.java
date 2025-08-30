@@ -1,6 +1,6 @@
-package com.github.egotting.impl_rinha2025.config;
+package com.github.egotting.impl_rinha2025.core.Executer;
 
-import com.github.egotting.impl_rinha2025.config.Interface.ITaskSimpleConfig;
+import com.github.egotting.impl_rinha2025.core.Executer.Interface.ITaskSimpleConfig;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.CompletableFuture;
@@ -16,8 +16,14 @@ public class TaskSimpleConfig implements ITaskSimpleConfig {
         _exec = Executors.newVirtualThreadPerTaskExecutor();
     }
 
+
     @Override
-    public <T> CompletableFuture<T> submit(Supplier<T> task) {
+    public CompletableFuture<Void> onlyRun(Runnable task) {
+        return CompletableFuture.runAsync(task);
+    }
+
+    @Override
+    public <T> CompletableFuture<T> supply(Supplier<T> task) {
         return CompletableFuture.supplyAsync(task, _exec);
     }
 }

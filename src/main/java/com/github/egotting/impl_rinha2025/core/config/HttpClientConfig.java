@@ -1,4 +1,4 @@
-package com.github.egotting.impl_rinha2025.config;
+package com.github.egotting.impl_rinha2025.core.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

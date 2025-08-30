@@ -1,6 +1,6 @@
-package com.github.egotting.impl_rinha2025.config;
+package com.github.egotting.impl_rinha2025.core.config;
 
-import com.github.egotting.impl_rinha2025.config.Interface.IUdpServerConfig;
+import com.github.egotting.impl_rinha2025.core.config.Interface.IUdpServerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

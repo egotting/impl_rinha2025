@@ -1,4 +1,4 @@
-package com.github.egotting.impl_rinha2025.config.Interface;
+package com.github.egotting.impl_rinha2025.core.config.Interface;
 
 public interface IUdpServerConfig {
 
