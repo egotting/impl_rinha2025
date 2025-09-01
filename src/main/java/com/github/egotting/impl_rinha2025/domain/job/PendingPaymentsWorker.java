@@ -37,11 +37,9 @@ public class PendingPaymentsWorker implements IPaymentWorker {
     public void pendent() throws IOException, InterruptedException {
         if (_queue.isEmpty()) return;
         int size = Math.min(_queue.sizeQueue(), 30);
-//        List<CompletableFuture<Boolean>> futures = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             payAsync();
         }
-//        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     private CompletableFuture<Boolean> payAsync() throws InterruptedException, IOException {

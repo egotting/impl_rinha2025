@@ -9,7 +9,6 @@ import java.time.Instant;
 public record PaymentProcessorRequest(
         String correlationId,
         BigDecimal amount,
-        @Nullable Boolean status,
         @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "UTC")
         @Nullable Instant requestAt
 ) {
@@ -17,7 +16,6 @@ public record PaymentProcessorRequest(
         return new PaymentProcessorRequest(
                 paymentRequest.correlationId(),
                 paymentRequest.amount(),
-                true,
                 Instant.now()
         );
     }
