@@ -28,10 +28,6 @@ public class PendingPaymentsWorker implements IPaymentWorker {
         _service = service;
     }
 
-//    @Override
-//    public void init() {
-//        _exec.submit(this::pendent);
-//    }
 
     @Scheduled(fixedDelay = 15)
     public void pendent() throws IOException, InterruptedException {

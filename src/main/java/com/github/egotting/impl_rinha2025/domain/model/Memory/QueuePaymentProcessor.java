@@ -29,7 +29,7 @@ public class QueuePaymentProcessor implements IQueuePaymentProcessor {
 
     @Override
     public PaymentRequest pollValue() throws InterruptedException {
-        return _queue.poll(200, TimeUnit.MILLISECONDS);
+        return _queue.poll(100, TimeUnit.MILLISECONDS);
     }
 
 
