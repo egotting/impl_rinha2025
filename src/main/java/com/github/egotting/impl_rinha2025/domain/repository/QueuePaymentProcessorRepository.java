@@ -19,7 +19,7 @@ public class QueuePaymentProcessorRepository implements IQueuePaymentProcessorRe
     }
 
     @Override
-    public PaymentRequest poll() throws InterruptedException {
+    public PaymentRequest poll() {
         return _queue.pollValue();
     }
 

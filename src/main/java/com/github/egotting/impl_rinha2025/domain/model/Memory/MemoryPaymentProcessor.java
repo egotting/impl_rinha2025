@@ -23,7 +23,7 @@ public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
                 request.correlationId(),
                 request.amount(),
                 Instant.now());
-        dbMemoryDefault.add(convert);
+        dbMemoryDefault.offer(convert);
     }
 
     @Override
@@ -32,14 +32,14 @@ public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
                 request.correlationId(),
                 request.amount(),
                 Instant.now());
-        dbMemoryFallback.add(convert);
+        dbMemoryFallback.offer(convert);
     }
 
     @Override
     public PaymentSummary summary(@Nullable Instant from, @Nullable Instant to) {
         PaymentSummary.PaymentSummaryDetails defaultSummary = processSummaryDefault(from, to);
         PaymentSummary.PaymentSummaryDetails fallbackSummary = processSummaryFallback(from, to);
-
+	System.out.println(new PaymentSummary(defaultSummary, fallbackSummary));
         return new PaymentSummary(defaultSummary, fallbackSummary);
     }
 

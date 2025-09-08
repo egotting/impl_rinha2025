@@ -6,8 +6,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 @EnableScheduling
-//@EnableAsync
-//@EnableWebFlux
 @SpringBootApplication
 public class ImplRinha2025Application {
     public static void main(String[] args) {

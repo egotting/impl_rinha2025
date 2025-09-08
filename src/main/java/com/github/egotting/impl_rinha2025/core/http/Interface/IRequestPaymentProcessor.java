@@ -1,12 +1,13 @@
 package com.github.egotting.impl_rinha2025.core.http.Interface;
 
+import com.github.egotting.impl_rinha2025.domain.ENUM.TypePaymentProcessor;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
+
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 public interface IRequestPaymentProcessor {
-    Mono<Boolean> paymentDefault(PaymentRequest request) throws IOException, InterruptedException;
-
-    Mono<Boolean> paymentFallback(PaymentRequest request) throws IOException, InterruptedException;
+    Mono<TypePaymentProcessor> payment(PaymentRequest request);
+    //Mono<Boolean> paymentFallback(PaymentRequest request);
 }

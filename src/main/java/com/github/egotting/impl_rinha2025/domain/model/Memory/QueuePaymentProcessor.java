@@ -4,13 +4,11 @@ import com.github.egotting.impl_rinha2025.domain.model.Memory.Interface.IQueuePa
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Component
 public class QueuePaymentProcessor implements IQueuePaymentProcessor {
-    private BlockingQueue<PaymentRequest> _queue = new LinkedBlockingQueue<>(10000);
+    private ConcurrentLinkedQueue<PaymentRequest> _queue = new ConcurrentLinkedQueue<>();
 
     @Override
     public void addInQueue(PaymentRequest request) {
@@ -28,8 +26,8 @@ public class QueuePaymentProcessor implements IQueuePaymentProcessor {
     }
 
     @Override
-    public PaymentRequest pollValue() throws InterruptedException {
-        return _queue.poll(100, TimeUnit.MILLISECONDS);
+    public PaymentRequest pollValue() {
+        return _queue.poll();
     }
 
 

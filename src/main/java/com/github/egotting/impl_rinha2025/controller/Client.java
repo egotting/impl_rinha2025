@@ -3,6 +3,7 @@ package com.github.egotting.impl_rinha2025.controller;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.repository.Interface.IQueuePaymentProcessorRepository;
 import com.github.egotting.impl_rinha2025.domain.service.Interface.IPaymentSummaryService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -20,15 +21,21 @@ public class Client {
         _queue = queue;
     }
 
+
     @PostMapping("/payments")
     public Mono<Void> sendPayment(@RequestBody PaymentRequest request) {
-        _queue.add(request);
-        return Mono.empty();
+    _queue.add(request);
+    return Mono.empty();
     }
 
-    @GetMapping(value = "/payments-summary", produces = "application/json")
-    public String getSummary(@RequestParam(value = "from", required = false) Instant from,
-                             @RequestParam(value = "from", required = false) Instant to) {
+    @GetMapping("/payments-summary")
+    public String getSummary(
+            @RequestParam(value = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            Instant from,
+            @RequestParam(value = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            Instant to) {
         return _service.getSummary(from, to);
     }
 }

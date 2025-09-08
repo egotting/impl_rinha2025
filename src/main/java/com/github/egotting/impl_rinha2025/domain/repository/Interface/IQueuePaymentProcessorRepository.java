@@ -5,7 +5,7 @@ import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 public interface IQueuePaymentProcessorRepository {
     void add(PaymentRequest request);
 
-    PaymentRequest poll() throws InterruptedException;
+    PaymentRequest poll();
 
     boolean isEmpty();
 
