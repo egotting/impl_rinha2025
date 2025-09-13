@@ -1,6 +1,5 @@
 package com.github.egotting.impl_rinha2025.domain.job;
 
-import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -12,6 +11,7 @@ import com.github.egotting.impl_rinha2025.domain.repository.Interface.IQueuePaym
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import io.netty.handler.timeout.TimeoutException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -24,8 +24,7 @@ public class PendingPaymentsWorker implements IPaymentWorker {
 
     public PendingPaymentsWorker(
             IQueuePaymentProcessorRepository queue,
-            IRequestPaymentProcessor request
-           ) {
+            IRequestPaymentProcessor request) {
         _queue = queue;
         _request = request;
     }
@@ -34,23 +33,21 @@ public class PendingPaymentsWorker implements IPaymentWorker {
     public void pendent() {
         if (!run.compareAndSet(false, true))
             return;
-        int size = Math.min(_queue.sizeQueue(), 20);
-
+        //System.out.println(_queue.poll());
+        int size = Math.min(_queue.sizeQueue(), 5);
         Flux.range(0, size)
-            .map(i -> _queue.poll())
-            .filter(Objects::nonNull)
-            .flatMap(payment -> _request.payment(payment)
-                     //.timeout(Duration.ofMillis(2000))
-                               .onErrorResume(e -> {
-                                       if (_payment.requeue()) {
-                                           _queue.add(payment);
-                                       }
-                                       return Mono.empty();
-                                   })
-                               //.retryWhen(Retry.backoff(2, Duration.ofMillis(200)))
-                               , 20)
-            .doFinally(signal -> run.set(false))
-            .subscribe();
+                .map(i -> _queue.poll())
+                .filter(Objects::nonNull)
+                .flatMapSequential(payment -> _request.payment(payment)
+                        .onErrorResume(e -> {
+                            if (_payment.requeue()) {
+                                _queue.add(payment);
+                            }
+                            return Mono.empty();
+                        }), 5)
+            /*TODO: inconsistencias diminuidas para 900 por diminuição de quantidade de processos simultâneos deixar o add na fila de forma reativa */
+                .doFinally(signal -> run.set(false))
+                .subscribe();
     }
 
 }
