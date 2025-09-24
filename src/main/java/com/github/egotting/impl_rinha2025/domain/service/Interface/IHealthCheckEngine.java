@@ -1,8 +1,7 @@
 package com.github.egotting.impl_rinha2025.domain.service.Interface;
 
 import com.github.egotting.impl_rinha2025.domain.ENUM.StatusPayment;
-import reactor.core.publisher.Mono;
 
-public interface IIntermediator {
-    Mono<StatusPayment> intermadiate();
+public interface IHealthCheckEngine {
+    StatusPayment startHealthCheck();
 }

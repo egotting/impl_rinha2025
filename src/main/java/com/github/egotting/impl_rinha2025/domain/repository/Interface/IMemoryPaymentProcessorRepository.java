@@ -11,6 +11,7 @@ public interface IMemoryPaymentProcessorRepository {
 
     void saveFallback(PaymentRequest request);
 
+
     PaymentSummary summary(Instant from, Instant to);
 
     void prune();

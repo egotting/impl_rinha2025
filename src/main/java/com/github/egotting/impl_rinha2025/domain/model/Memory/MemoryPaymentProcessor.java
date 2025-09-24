@@ -9,37 +9,27 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
-    ConcurrentLinkedQueue<PaymentProcessorRequest> dbMemoryDefault = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<PaymentProcessorRequest> dbMemoryFallback = new ConcurrentLinkedQueue<>();
-
+    ConcurrentHashMap<String, PaymentProcessorRequest> dbMemoryDefault = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, PaymentProcessorRequest> dbMemoryFallback = new ConcurrentHashMap<>();
 
     @Override
     public void addInMemoryDefault(PaymentRequest request) {
-        PaymentProcessorRequest convert = new PaymentProcessorRequest(
-                request.correlationId(),
-                request.amount(),
-                Instant.now());
-        dbMemoryDefault.offer(convert);
+        dbMemoryDefault.putIfAbsent(request.correlationId(), PaymentProcessorRequest.of(request));
     }
 
     @Override
     public void addInMemoryFallback(PaymentRequest request) {
-        PaymentProcessorRequest convert = new PaymentProcessorRequest(
-                request.correlationId(),
-                request.amount(),
-                Instant.now());
-        dbMemoryFallback.offer(convert);
+        dbMemoryFallback.putIfAbsent(request.correlationId(), PaymentProcessorRequest.of(request));
     }
 
     @Override
     public PaymentSummary summary(@Nullable Instant from, @Nullable Instant to) {
         PaymentSummary.PaymentSummaryDetails defaultSummary = processSummaryDefault(from, to);
         PaymentSummary.PaymentSummaryDetails fallbackSummary = processSummaryFallback(from, to);
-	System.out.println(new PaymentSummary(defaultSummary, fallbackSummary));
         return new PaymentSummary(defaultSummary, fallbackSummary);
     }
 
@@ -51,7 +41,7 @@ public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
 
     private PaymentSummary.PaymentSummaryDetails processSummaryDefault(Instant from, Instant to) {
         var totalDefault = dbMemoryDefault.size();
-        var totalDefaultAmount = dbMemoryDefault.stream()
+        var totalDefaultAmount = dbMemoryDefault.values().stream()
                 .filter(t -> t.requestAt() != null &&
                         (from == null || !t.requestAt().isBefore(from)) &&
                         (to == null || !t.requestAt().isAfter(to)))
@@ -62,7 +52,7 @@ public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
 
     private PaymentSummary.PaymentSummaryDetails processSummaryFallback(Instant from, Instant to) {
         var totalFallback = dbMemoryFallback.size();
-        var totalFallbackAmount = dbMemoryFallback.stream().filter(t -> t.requestAt() != null &&
+        var totalFallbackAmount = dbMemoryFallback.values().stream().filter(t -> t.requestAt() != null &&
                         (from == null || !t.requestAt().isBefore(from)) &&
                         (to == null || !t.requestAt().isAfter(to)))
                 .map(PaymentProcessorRequest::amount)
@@ -70,5 +60,11 @@ public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
         return new PaymentSummary.PaymentSummaryDetails(totalFallback, totalFallbackAmount);
     }
 
+    // private boolean isAlreadyExists(String correlationId) {
+    // if (correlationId == null)
+    // return false;
+    // return dbMemoryDefault.stream().anyMatch(p -> p.correlationId() != null &&
+    // p.correlationId().trim().equalsIgnoreCase(correlationId.trim()));
+    // }
 
 }

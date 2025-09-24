@@ -1,7 +1,7 @@
 package com.github.egotting.impl_rinha2025.domain.ENUM;
 
-public enum TypePaymentProcessor {
+public enum StatusPayment {
     DEFAULT,
     FALLBACK,
-    FAILED
+    NONE
 }

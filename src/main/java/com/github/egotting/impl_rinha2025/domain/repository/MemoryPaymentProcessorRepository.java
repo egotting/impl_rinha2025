@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-
 @Component
 public class MemoryPaymentProcessorRepository implements IMemoryPaymentProcessorRepository {
     private final IMemoryPaymentProcessor _memory;
@@ -16,7 +15,6 @@ public class MemoryPaymentProcessorRepository implements IMemoryPaymentProcessor
     public MemoryPaymentProcessorRepository(IMemoryPaymentProcessor memory) {
         _memory = memory;
     }
-
 
     @Override
     public void saveDefault(PaymentRequest request) {
@@ -37,4 +35,5 @@ public class MemoryPaymentProcessorRepository implements IMemoryPaymentProcessor
     public void prune() {
         _memory.deleteAll();
     }
+
 }

@@ -12,4 +12,4 @@ COPY --from=build /app/target/*.jar app.jar
 ENV PAYMENT_PROCESSOR_URL_DEFAULT=http://payment-processor-default:8080
 ENV PAYMENT_PROCESSOR_URL_FALLBACK=http://payment-processor-fallback:8080
 ENV JAVA_OPTS="-Xmx128m -Xms64m -XX:+UseSerialGC"
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -2,7 +2,6 @@ package com.github.egotting.impl_rinha2025.core.config;
 
 import com.github.egotting.impl_rinha2025.core.config.Interface.IUdpServerConfig;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,7 +11,7 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@Component
+
 public class UdpServerConfig implements IUdpServerConfig {
 
     @Value("${localhost.payment.processor.default}")
