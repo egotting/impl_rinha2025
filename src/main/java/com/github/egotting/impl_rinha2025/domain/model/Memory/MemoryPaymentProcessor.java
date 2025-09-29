@@ -1,5 +1,6 @@
 package com.github.egotting.impl_rinha2025.domain.model.Memory;
 
+import com.github.egotting.impl_rinha2025.domain.ENUM.StatusPayment;
 import com.github.egotting.impl_rinha2025.domain.model.Memory.Interface.IMemoryPaymentProcessor;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentProcessorRequest;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
@@ -13,58 +14,64 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class MemoryPaymentProcessor implements IMemoryPaymentProcessor {
-    ConcurrentHashMap<String, PaymentProcessorRequest> dbMemoryDefault = new ConcurrentHashMap<>();
-    ConcurrentHashMap<String, PaymentProcessorRequest> dbMemoryFallback = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, PaymentProcessorRequest> db = new ConcurrentHashMap<>();
+
 
     @Override
-    public void addInMemoryDefault(PaymentRequest request) {
-        dbMemoryDefault.putIfAbsent(request.correlationId(), PaymentProcessorRequest.of(request));
+    public void addDb(PaymentRequest value, StatusPayment type) {
+        db.compute(value.correlationId(), (id, exist) -> {
+            if (exist == null) return PaymentProcessorRequest.of(value, type);
+
+            if (exist.status() == StatusPayment.DEFAULT) return exist;
+            return PaymentProcessorRequest.of(value, type);
+        });
     }
 
-    @Override
-    public void addInMemoryFallback(PaymentRequest request) {
-        dbMemoryFallback.putIfAbsent(request.correlationId(), PaymentProcessorRequest.of(request));
-    }
-
-    @Override
     public PaymentSummary summary(@Nullable Instant from, @Nullable Instant to) {
-        PaymentSummary.PaymentSummaryDetails defaultSummary = processSummaryDefault(from, to);
-        PaymentSummary.PaymentSummaryDetails fallbackSummary = processSummaryFallback(from, to);
+        long totalDefault = 0, totalFallback = 0;
+        BigDecimal amountDefault = BigDecimal.ZERO, amountFallback = BigDecimal.ZERO;
+
+        for (PaymentProcessorRequest req : db.values()) {
+            Instant ts = req.requestAt();
+            if (ts != null) {
+                if (from != null && ts.isBefore(from)) continue;
+                if (to != null && ts.isAfter(to)) continue;
+            }
+
+            if (req.status() == StatusPayment.DEFAULT) {
+                totalDefault++;
+                amountDefault = amountDefault.add(req.amount());
+            }
+            if (req.status() == StatusPayment.FALLBACK) {
+                totalFallback++;
+                amountFallback = amountFallback.add(req.amount());
+            }
+        }
+        PaymentSummary.PaymentSummaryDetails defaultSummary =
+                new PaymentSummary.PaymentSummaryDetails(totalDefault, amountDefault);
+        PaymentSummary.PaymentSummaryDetails fallbackSummary =
+                new PaymentSummary.PaymentSummaryDetails(totalFallback, amountFallback);
+        pauseFor(20);
         return new PaymentSummary(defaultSummary, fallbackSummary);
     }
 
     @Override
+    public Boolean exists(String id) {
+        return db.containsKey(id);
+    }
+
+    @Override
     public void deleteAll() {
-        dbMemoryDefault.clear();
-        dbMemoryFallback.clear();
+        db.clear();
     }
 
-    private PaymentSummary.PaymentSummaryDetails processSummaryDefault(Instant from, Instant to) {
-        var totalDefault = dbMemoryDefault.size();
-        var totalDefaultAmount = dbMemoryDefault.values().stream()
-                .filter(t -> t.requestAt() != null &&
-                        (from == null || !t.requestAt().isBefore(from)) &&
-                        (to == null || !t.requestAt().isAfter(to)))
-                .map(PaymentProcessorRequest::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new PaymentSummary.PaymentSummaryDetails(totalDefault, totalDefaultAmount);
-    }
 
-    private PaymentSummary.PaymentSummaryDetails processSummaryFallback(Instant from, Instant to) {
-        var totalFallback = dbMemoryFallback.size();
-        var totalFallbackAmount = dbMemoryFallback.values().stream().filter(t -> t.requestAt() != null &&
-                        (from == null || !t.requestAt().isBefore(from)) &&
-                        (to == null || !t.requestAt().isAfter(to)))
-                .map(PaymentProcessorRequest::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new PaymentSummary.PaymentSummaryDetails(totalFallback, totalFallbackAmount);
+    void pauseFor(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
-
-    // private boolean isAlreadyExists(String correlationId) {
-    // if (correlationId == null)
-    // return false;
-    // return dbMemoryDefault.stream().anyMatch(p -> p.correlationId() != null &&
-    // p.correlationId().trim().equalsIgnoreCase(correlationId.trim()));
-    // }
 
 }

@@ -1,10 +1,11 @@
 package com.github.egotting.impl_rinha2025.domain.service;
 
+import com.github.egotting.impl_rinha2025.domain.service.Interface.IHealthCheckEngine;
 import org.springframework.stereotype.Component;
 
 @Component
-public class HealthCheckEngine {
-//    private AtomicBoolean isExec = new AtomicBoolean(false);
+public class HealthCheckEngine implements IHealthCheckEngine {
+//    //private AtomicBoolean isExec = new AtomicBoolean(false);
 //
 //    private final IHealthCheck _hc;
 //    private ExecutorService _exec = Executors.newVirtualThreadPerTaskExecutor();
@@ -13,23 +14,10 @@ public class HealthCheckEngine {
 //        this._hc = _hc;
 //    }
 //
-//    public boolean isExec() {
-//        return isExec.get();
-//    }
 //
-//    public StatusPayment startHealthCheck() {
-//        isExec.set(true);
-//        _exec.submit(() -> {
-//            while (true) {
-//                healthCheck();
-//                try {
-//                    Thread.sleep(5_000);
-//                } catch (RuntimeException | InterruptedException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//        });
-//        return StatusPayment.NONE;
+//    public StatusPayment startHealthCheck() throws InterruptedException {
+//        Thread.sleep(5000);
+//        return healthCheck();
 //    }
 //
 //    private StatusPayment healthCheck() {

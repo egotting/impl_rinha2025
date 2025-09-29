@@ -1,18 +1,19 @@
 package com.github.egotting.impl_rinha2025.domain.repository.Interface;
 
+import com.github.egotting.impl_rinha2025.domain.ENUM.StatusPayment;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentSummary;
+import jakarta.annotation.Nullable;
 
 import java.time.Instant;
 
 public interface IMemoryPaymentProcessorRepository {
 
-    void saveDefault(PaymentRequest request);
+    void save(PaymentRequest request, StatusPayment type);
 
-    void saveFallback(PaymentRequest request);
+    PaymentSummary summary(@Nullable Instant from, @Nullable Instant to);
+    Boolean exists(String id);
 
-
-    PaymentSummary summary(Instant from, Instant to);
 
     void prune();
 }

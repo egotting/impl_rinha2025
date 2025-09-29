@@ -1,20 +1,20 @@
 package com.github.egotting.impl_rinha2025.core.http;
 
-import org.springframework.stereotype.Service;
+import com.github.egotting.impl_rinha2025.core.http.Interface.IHealthCheck;
 
-@Service
-public class HealthCheck {
+public class HealthCheck implements IHealthCheck {
 //    private final Logger logger = Logger.getLogger(HealthCheck.class.getName());
 //    @Value("${payment.processor.default}")
 //    private String _default;
-//    @Value("${payment.processor.default}")
+//    @Value("${payment.processor.fallback}")
 //    private String _fallback;
+//
 //    private final String HEALTH_CHECK_URL = "/payments/service-health";
 //
-//    private final WebClient _client;
+//    private final WebClient web_client;
 //
-//    public HealthCheck(WebClient _client) {
-//        this._client = _client;
+//    public HealthCheck(WebClient web_client) {
+//        this.web_client = web_client;
 //    }
 //
 //    @Override
@@ -28,7 +28,7 @@ public class HealthCheck {
 //    }
 //
 //    private HealthCheckStatus getHealthCheck(String url) {
-//        ResponseEntity<HealthCheckStatus> request = _client
+//        ResponseEntity<HealthCheckStatus> request = web_client
 //                .get()
 //                .uri(url + HEALTH_CHECK_URL)
 //                .retrieve()

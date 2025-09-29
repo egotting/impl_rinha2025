@@ -1,7 +1,9 @@
 package com.github.egotting.impl_rinha2025.domain.service.Interface;
 
-public interface IPaymentService {
+import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 
-    void process
+public interface IProcessPaymentService {
+
+    void process(PaymentRequest value);
 
 }

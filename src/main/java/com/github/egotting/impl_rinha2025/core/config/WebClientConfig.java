@@ -3,7 +3,6 @@ package com.github.egotting.impl_rinha2025.core.config;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +17,8 @@ import java.util.logging.Logger;
 
 @Configuration
 public class WebClientConfig {
+
+
     private final int connection_timeout = 5000;
     private final int read_timeout = 10000;
     private final int socket_timeout = 10000;
@@ -27,25 +28,12 @@ public class WebClientConfig {
     private final int max_life_time = 60000;
 
     private final Logger logger = Logger.getLogger(WebClientConfig.class.getName());
-    @Value("${payment.processor.default}")
-    private String _default;
-    @Value("${payment.processor.fallback}")
-    private String _fallback;
+
 
     @Bean
-    public WebClient defaultWebClient() {
+    public WebClient webClient() {
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(buildClientReactor()))
-                .baseUrl(_default)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-    }
-
-    @Bean
-    public WebClient fallbackWebClient() {
-        return WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(buildClientReactor()))
-                .baseUrl(_fallback)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }

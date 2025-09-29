@@ -3,6 +3,7 @@ package com.github.egotting.impl_rinha2025.domain.service;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentSummary;
 import com.github.egotting.impl_rinha2025.domain.repository.Interface.IMemoryPaymentProcessorRepository;
 import com.github.egotting.impl_rinha2025.domain.service.Interface.IPaymentSummaryService;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,8 +17,8 @@ public class PaymentSummaryService implements IPaymentSummaryService {
     }
 
     @Override
-    public String getSummary(Instant from, Instant to) {
-        PaymentSummary response = _repo.summary(from, to);
+    public String getSummary(@Nullable Instant from, @Nullable Instant to) {
+        PaymentSummary summary = _repo.summary(from, to);
         return """
                 {
                     "default": {
@@ -30,9 +31,10 @@ public class PaymentSummaryService implements IPaymentSummaryService {
                     }
                 }
                 """.formatted(
-                response.valueDefault().totalRequests(),
-                response.valueDefault().totalAmount(),
-                response.valueFallback().totalRequests(),
-                response.valueFallback().totalAmount());
+                summary.valueDefault().totalRequests(),
+                summary.valueDefault().totalAmount(),
+                summary.valueFallback().totalRequests(),
+                summary.valueFallback().totalAmount()
+        );
     }
 }

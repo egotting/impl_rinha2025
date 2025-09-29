@@ -1,14 +1,13 @@
 
 package com.github.egotting.impl_rinha2025.domain.worker;
 
-import com.github.egotting.impl_rinha2025.core.http.Interface.IRequestDefault;
-import com.github.egotting.impl_rinha2025.core.http.Interface.IRequestFallback;
-import com.github.egotting.impl_rinha2025.domain.ENUM.StatusPayment;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.repository.Interface.IMemoryPaymentProcessorRepository;
+import com.github.egotting.impl_rinha2025.domain.service.Interface.IHealthCheckEngine;
+import com.github.egotting.impl_rinha2025.domain.service.Interface.IProcessPaymentService;
 import com.github.egotting.impl_rinha2025.domain.service.Interface.ISemaphoreService;
-import com.github.egotting.impl_rinha2025.domain.worker.Interface.IAddQueue;
-import jakarta.annotation.PostConstruct;
+import com.github.egotting.impl_rinha2025.domain.worker.Interface.IPendingPaymentsWorker;
+import com.github.egotting.impl_rinha2025.domain.worker.Interface.IQueue;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.*;
@@ -16,77 +15,53 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 @Service
-public class PendingPaymentsWorker implements IAddQueue {
-    private final ConcurrentLinkedQueue<PaymentRequest> _queue = new ConcurrentLinkedQueue<>();
-    private final BlockingQueue<PaymentRequest> queue_retry = new LinkedBlockingQueue<>(20);
+public class PendingPaymentsWorker implements IQueue, IPendingPaymentsWorker {
+    private final BlockingQueue<PaymentRequest> _queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<PaymentRequest> retry_queue = new LinkedBlockingQueue<>();
 
     private final Logger logger = Logger.getLogger(PendingPaymentsWorker.class.getName());
-    private final AtomicBoolean run = new AtomicBoolean(false);
 
     private final ISemaphoreService _semaphore;
-    private final IRequestDefault request_default;
-    private final IRequestFallback request_fallback;
     private final IMemoryPaymentProcessorRepository _memory;
+    private final IHealthCheckEngine health_check;
+    private final IProcessPaymentService _process;
 
-    private final int thread_delay = 2;
+    private final AtomicBoolean run = new AtomicBoolean(false);
+    private final int thread_delay = 5;
     private final ExecutorService _exec = Executors.newVirtualThreadPerTaskExecutor();
 
     public PendingPaymentsWorker(
             ISemaphoreService semaphore,
-            IRequestDefault request_default,
-            IRequestFallback request_fallback,
-            IMemoryPaymentProcessorRepository memory) {
+            IMemoryPaymentProcessorRepository memory,
+            IHealthCheckEngine healthCheck,
+            IProcessPaymentService process
+    ) {
         _semaphore = semaphore;
-        this.request_default = request_default;
-        this.request_fallback = request_fallback;
         _memory = memory;
+        health_check = healthCheck;
+        _process = process;
     }
 
-    @PostConstruct
-    public void init() {
-        pauseFor(100);
-        worker();
-    }
-
+    @Override
     public void worker() {
+        if (!run.compareAndSet(false, true)) return;
         _exec.submit(() -> {
             while (true) {
-                if (_semaphore.canISleep() == 1) {
-                    logger.severe("PAUSE FOR SUMMARY --------------");
-                    pauseFor(100);
-                    _semaphore.setRun(false);
-                    continue;
-                }
-                if (_queue.isEmpty()) continue;
-                System.out.println("FILA N ESTA LIMPA ---------------------");
-                var value = _queue.poll();
-                System.out.println("VALUE: " + value.amount());
-                pauseFor(thread_delay);
-                var response = request_default.payment(value);
-                System.out.println("RESPONSE ---------------------: " + response.name());
-                if (response == StatusPayment.NONE) continue;
-//                if (response == StatusPayment.NONE) {
-//                    try {
-//                        pauseFor(50);
-//                        var fallback_response = request_fallback.payment(value);
-//                        if (fallback_response == StatusPayment.NONE) continue;
-//                        _memory.saveFallback(value);
-//                    } catch (RuntimeException err) {
-//                        pauseFor(500);
-//                    }
+//                if (_semaphore.canISleep() == 1) {
+//                    logger.info("WORKER PAUSADO PELO SUMMARY-----------");
+//                    _semaphore.set(false);
+//                    pauseFor(500);
 //                }
-                _memory.saveDefault(value);
+                var value = _queue.take();
+                logger.info("WORKER VAI INICIAR-----------");
+
+                pauseFor(thread_delay);
+                try {
+                    _process.process(value);
+                } catch (RuntimeException e) {
+                    logger.severe("DEU NONE");
+                }
             }
-        });
-    }
-
-
-    private void workerToRetryValues() {
-        _exec.execute(() -> {
-            var value = queue_retry.poll();
-            var response = request_default.payment(value);
-            if (response == StatusPayment.NONE) return;
-            _memory.saveDefault(value);
         });
     }
 
@@ -99,7 +74,12 @@ public class PendingPaymentsWorker implements IAddQueue {
     }
 
     @Override
+    public boolean isRun() {
+        return run.get();
+    }
+
+    @Override
     public void add(PaymentRequest value) {
-        _queue.offer(value);
+        if (!_memory.exists(value.correlationId())) _queue.add(value);
     }
 }

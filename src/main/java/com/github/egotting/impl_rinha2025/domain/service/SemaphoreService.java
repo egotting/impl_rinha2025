@@ -21,7 +21,7 @@ public class SemaphoreService implements ISemaphoreService {
     }
 
     @Override
-    public void setRun(boolean value) {
+    public void set(boolean value) {
         run.set(value);
     }
 }

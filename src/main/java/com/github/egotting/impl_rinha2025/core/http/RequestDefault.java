@@ -6,63 +6,48 @@ import com.github.egotting.impl_rinha2025.domain.ENUM.StatusPayment;
 import com.github.egotting.impl_rinha2025.domain.model.PaymentRequest;
 import com.github.egotting.impl_rinha2025.domain.repository.Interface.IMemoryPaymentProcessorRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.util.logging.Logger;
 
-@Service
+@Component
 public class RequestDefault implements IRequestDefault {
     private final Logger logger = Logger.getLogger(RequestDefault.class.getName());
-    private final IRequestFallback _fallback;
     private final IMemoryPaymentProcessorRepository _memory;
     //private final RestClient rest_client;
-    private final WebClient web_client;
+    private final RestClient rest_client;
+    private final IRequestFallback fallback_request;
 
     public RequestDefault(
-            IRequestFallback _fallback,
             IMemoryPaymentProcessorRepository memory,
-            @Qualifier("defaultWebClient") WebClient webClient) {
-        this._fallback = _fallback;
+            @Qualifier("defaultRestClient") RestClient rest_client,
+            IRequestFallback fallbackRequest) {
         _memory = memory;
-        web_client = webClient;
+        this.rest_client = rest_client;
+        fallback_request = fallbackRequest;
     }
 
     @Override
     public StatusPayment payment(PaymentRequest pay) {
-
-        ResponseEntity<Void> response = web_client
-                .post()
-                .uri("/payments")
-                .bodyValue(pay)
-                .retrieve()
-                .onStatus(HttpStatusCode::is2xxSuccessful, res -> {
-                    logger.info("Default o send " + res.statusCode());
-                    return Mono.empty();
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, res -> {
-                    logger.info("Erro 500: " + res.statusCode());
-                    return Mono.empty();
-                })
-                .onStatus(HttpStatusCode::is4xxClientError, res ->
-                        res.bodyToMono(String.class).flatMap(body -> {
-                            logger.severe("Erro 4xx: " + res.statusCode() + " Body: " + body);
-                            return Mono.error(new RuntimeException("Erro 4xx: " + body));
-                        })
-                )
-                .toBodilessEntity()
-                .block();
-
-        if (response == null || !response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("STATUS: " + StatusPayment.NONE);
-            return StatusPayment.NONE;
+        try {
+            ResponseEntity<Void> response = rest_client
+                    .post()
+                    .uri("/payments")
+                    .body(pay)
+                    .retrieve()
+                    .toBodilessEntity();
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return StatusPayment.DEFAULT;
+            } else {
+                logger.warning("INDO PARA FALLBACK: " + response.getStatusCode());
+                return StatusPayment.FALLBACK;
+            }
+        } catch (Exception e) {
+            logger.severe("Default err: " + e.getMessage());
+            return StatusPayment.FALLBACK;
         }
-
-        System.out.println("STATUS: " + StatusPayment.DEFAULT);
-        return StatusPayment.DEFAULT;
     }
 
 }
