@@ -1,3 +1,9 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
-typescript filter=lfs diff=lfs merge=lfs -text
+# Spring Boot
+/target/
+/*.jar
+/*.war
+
+# Node/Front-end (se houver)
+node_modules/
+dist/
+*.log
